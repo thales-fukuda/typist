@@ -19,43 +19,45 @@ import type { EditorOptions } from '@tiptap/core'
  * @returns A new editor instance with the given options.
  */
 function useEditor(
-    options: Partial<EditorOptions> = {},
-    dependencies: DependencyList = [],
+	options: Partial<EditorOptions> = {},
+	dependencies: DependencyList = [],
 ): Editor {
-    const [editor, setEditor] = useState<Editor>(() => new Editor(options))
+	const [editor, setEditor] = useState<Editor>(() => new Editor(options))
 
-    const forceRerender = useRerender()
+	const forceRerender = useRerender()
 
-    useEffect(
-        function initializeEditorInstance() {
-            let instance: Editor
+	useEffect(
+		function initializeEditorInstance() {
+			if (!editor) return
 
-            if (editor.isDestroyed) {
-                instance = new Editor(options)
-                setEditor(instance)
-            } else {
-                instance = editor
-            }
+			let instance: Editor
 
-            instance.on('transaction', () => {
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        if (!instance.isDestroyed) {
-                            forceRerender()
-                        }
-                    })
-                })
-            })
+			if (editor.isDestroyed) {
+				instance = new Editor(options)
+				setEditor(instance)
+			} else {
+				instance = editor
+			}
 
-            return function destroyEditorInstance() {
-                instance.destroy()
-            }
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        dependencies,
-    )
+			instance.on('transaction', () => {
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						if (!instance.isDestroyed) {
+							forceRerender()
+						}
+					})
+				})
+			})
 
-    return editor
+			return function destroyEditorInstance() {
+				instance.destroy()
+			}
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		dependencies,
+	)
+
+	return editor
 }
 
 export { useEditor }
